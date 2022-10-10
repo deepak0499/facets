@@ -1,0 +1,81 @@
+﻿@model AzureSearch.Models.SearchData
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<head>
+  
+    <link rel="stylesheet" href="~/css/hotels.css" />
+
+</head>
+
+<body>
+
+    @using (Html.BeginForm("Index", "Home", FormMethod.Post))
+    {
+        <table>
+            <tr>
+                <td></td>
+                <td>
+                    <h1 class="sampleTitle">
+                        <img src="~/images/azure-logo.png" width="80" />
+                        Hotels Search 
+                    </h1>
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>
+                    <!-- Display the search text box, with the search icon to the right of it. -->
+                    <div class="searchBoxForm">
+                        @Html.TextBoxFor(m => m.searchText, new { @class = "searchBox" }) <input class="searchBoxSubmit" type="submit" value="">
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td valign="top">
+                    <div id="facetplace" class="facetchecks">
+
+                        @if (Model != null && Model.facetText != null)
+                        {
+                            <h5 class="facetheader">Amenities:</h5>
+                            <ul class="facetlist">
+                                @for (var c = 0; c < Model.facetText.Length; c++)
+                                {
+                                    <li> @Html.CheckBoxFor(m => m.facetOn[c], new { @id = "check" + c.ToString() }) @Model.facetText[c] </li>
+                                }
+
+                            </ul>
+                        }
+                    </div>
+                </td>
+                <td>
+                    @if (Model != null && Model.resultList != null)
+                    {
+                        // Show the total result count.
+                    <p class="sampleText">
+                        @Model.resultList.TotalCount Results <br />
+                    </p>
+                        var results = Model.resultList.GetResults().ToList();
+                        <div id="myDiv" style="width: 800px; height: 450px; overflow-y: scroll;" onscroll="scrolled()">
+
+                            <!-- Show the hotel data. -->
+                            @for (var i = 0; i < results.Count; i++)
+                            {
+
+                                string amenities = string.Join(", ", results[i].Document.Tags);
+                                string fullDescription = results[i].Document.Description;
+                                fullDescription += $"\nAmenities: {amenities}";
+
+                                // Display the hotel details.
+                                @Html.TextArea($"name{i}", results[i].Document.HotelName, new { @class = "box1A" })
+                                @Html.TextArea($"desc{i}", fullDescription, new { @class = "box3" })
+                            }
+                        </div>
+                    }
+                </td>
+            </tr>
+        </table>
+    }
+</body>
