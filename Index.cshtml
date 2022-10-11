@@ -1,0 +1,120 @@
+﻿@model AzureSearch.Models.SearchData
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<head>
+  
+    <link rel="stylesheet" href="~/css/hotels.css" />
+
+</head>
+
+<body>
+
+    @using (Html.BeginForm("Index", "Home", FormMethod.Post))
+    {
+        <table>
+            <tr>
+                <td></td>
+                <td>
+                    <h1 class="sampleTitle">
+                        <img src="~/images/azure-logo.png" width="80" />
+                        Hotels Search - Order Results
+                    </h1>
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>
+                    <!-- Display the search text box, with the search icon to the right of it. -->
+                    <div class="searchBoxForm">
+                        @Html.TextBoxFor(m => m.searchText, new { @class = "searchBox" }) <input class="searchBoxSubmit" type="submit" value="">
+                    </div>
+
+                    <div class="searchBoxForm">
+                        <b>&nbsp;Order:&nbsp;</b>
+                        @Html.RadioButtonFor(m => m.scoring, "Default") Default&nbsp;&nbsp;
+                        @Html.RadioButtonFor(m => m.scoring, "RatingRenovation") By numerical Rating&nbsp;&nbsp;
+                        @Html.RadioButtonFor(m => m.scoring, "boostAmenities") By Amenities&nbsp;&nbsp;
+                        @Html.RadioButtonFor(m => m.scoring, "renovatedAndHighlyRated") By Renovated date/Rating profile&nbsp;&nbsp;
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td valign="top">
+                    <div id="facetplace" class="facetchecks">
+
+                        @if (Model != null && Model.facetAmenity != null)
+                        {
+                            <h5 class="facetheader">Amenities:</h5>
+                            <ul class="facetlist">
+                                @for (var c = 0; c < Model.facetAmenity.Length; c++)
+                                {
+                                    <li> @Html.CheckBoxFor(m => m.facetOn[c], new { @id = "check" + c.ToString() }) @Model.facetAmenity[c] </li>
+                                }
+
+                            </ul>
+
+                            <h5 class="facetheader">Category:</h5>
+                            <ul class="facetlist">
+                                @for (var c = 0; c < Model.facetcategory.Length; c++)
+                                {
+                                    <li> @Html.CheckBoxFor(m => m.facetCatOn[c], new { @id = "check" + c.ToString() }) @Model.facetcategory[c] </li>
+                                }
+
+                            </ul>
+                        }
+                    </div>
+                </td>
+                <td>
+                    @if (Model != null && Model.resultList != null)
+                    {
+                        // Show the total result count.
+                    <p class="sampleText">
+                        @Model.resultList.TotalCount Results <br />
+                    </p>
+
+                        var results = Model.resultList.GetResults().ToList();
+                        <div id="myDiv" style="width: 800px; height: 450px; overflow-y: scroll;" onscroll="scrolled()">
+
+                            <!-- Show the hotel data. -->
+                            @for (var i = 0; i < results.Count; i++)
+                            {
+                                var ratingText = $"Rating: {results[i].Document.Rating}";
+
+                                string amenities = string.Join(", ", results[i].Document.Tags);
+                                string fullDescription = results[i].Document.Description;
+                                fullDescription += $"\nAmenities: {amenities}";
+
+                                // Display the hotel details.
+                                @Html.TextArea($"name{i}", results[i].Document.HotelName, new { @class = "box1A" })
+                                @Html.TextArea($"rating{i}", ratingText, new { @class = "box1B" })
+                                @Html.TextArea($"desc{i}", fullDescription, new { @class = "box3" })
+                            }
+                        </div>
+
+                        <script>
+                            function scrolled() {
+                                if (myDiv.offsetHeight + myDiv.scrollTop >= myDiv.scrollHeight) {
+                                    $.getJSON("/Home/Next", function (data) {
+                                        var div = document.getElementById('myDiv');
+
+                                        // Append the returned data to the current list of hotels.
+                                        for (var i = 0; i < data.length; i += 5) {
+                                            div.innerHTML += '\n<textarea class="box1A">' + data[i] + '</textarea>';
+                                            div.innerHTML += '<textarea class="box1B">' + data[i + 1] + '</textarea>';
+                                            div.innerHTML += '\n<textarea class="box2A">' + data[i + 2] + '</textarea>';
+                                            div.innerHTML += '<textarea class="box2B">' + data[i + 3] + '</textarea>';
+                                            div.innerHTML += '\n<textarea class="box3">' + data[i + 4] + '</textarea>';
+                                        }
+                                    });
+                                }
+                            }
+                        </script>
+                    }
+                </td>
+            </tr>
+        </table>
+    }
+</body>
